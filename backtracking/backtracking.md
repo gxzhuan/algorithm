@@ -157,6 +157,82 @@ int main(void) {
 }
 ```
 
+3. 有效的括号。对于给定的正整数`n`，求其所有的有效的括号，比如`n = 1`:
+
+`()`
+
+`n = 2`:
+
+`()`
+
+`()()`
+
+`(())`
+
+```c
+// valid_braces.c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define LEN 10
+#define LEFT '('
+#define RIGHT ')'
+#define BALCK ' '
+
+void print_buffer(char* buffer, int start_index, int ii) {
+    for (int i = 0; i < 2 *(ii + 1); i++) {
+        printf("%c", *(buffer + i));
+    }
+    printf("\n");
+
+    return;
+}
+
+void push_buffer(char* buffer, int start_index, int ii) {
+    int index = 2 * start_index;
+    for (; index < 2 * start_index + (ii  - start_index + 1); index++) {
+        buffer[index] = LEFT;
+    }
+    for (; index < 2 * (ii + 1); index++) {
+        buffer[index] = RIGHT;
+    }
+}
+
+void pop_buffer(char* buffer, int start_index, int ii) {
+    int index = 2 * start_index;
+    for (; index < 2 *(ii + 1); index++) {
+        buffer[index] = BALCK;
+    }
+}
+
+void backtracking(char* buffer, int start_index, int step, int n) {
+    if (step == n) {
+        return;
+    }
+
+    for (int i = start_index; i < n; i++) {
+        push_buffer(buffer, start_index, i);
+        print_buffer(buffer, start_index, i);
+        backtracking(buffer, i + 1, step + 1, n);
+        // 这里的pop_buffer要不要都行，因为print_buffer只值依赖于
+        // start与end
+        // pop_buffer(buffer, start_index, i);
+    }
+    return;
+}
+
+int main(void) {
+    char* buffer;
+    buffer = (char*)malloc(sizeof(char) * 2 * LEN);
+    int n = 5;
+    backtracking(buffer, 0, 0, n);
+
+    free(buffer);
+    return 0;
+}
+```
+
 #### 求和
 
 1. 对于给定的集合`A = {1, ... , N}`, 从中选取`k (0 <= k <= len(A))`个元素，使他们的和为`sum`, 求出所有的可能
@@ -282,6 +358,86 @@ int main(void) {
         *(buffer + i) = (char*)malloc(sizeof(char) * LEN);
     int len = 6;
     backtracking(string, len, buffer, 0, 0);
+
+    for (int i = 0; i < LEN; i++) {
+        free(*(buffer + i));
+    }
+    free(buffer);
+    return 0;
+}
+```
+
+#### n皇后
+
+```c
+// n_queens.c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define LEN 10
+#define QUEEN '@'
+#define BLACK '#'
+
+
+int is_vaild(char** buffer, int ii, int step, int n) {
+    if (step == 0)
+        return 1;
+    for (int i = 0; i <= step; i++) {
+        if (*(*(buffer + i) + ii) == QUEEN)
+            return 0;
+    }
+    for (int i = 1; (ii - i >= 0) && (step - i >= 0); i++) {
+        if (*(*(buffer + step - i) + ii - i) == QUEEN)
+            return 0;
+    }
+    for (int i = 1; (step - i >= 0) && (ii + i < n); i++) {
+        if (*(*(buffer + step - i) + ii + i) == QUEEN)
+            return 0;
+    }
+
+    return 1;
+}
+
+void print_buffer(char** buffer, int n) {
+    static int count = 1;
+    printf("case %d:\n", count++);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++)
+        printf("%c", *(*(buffer + i) + j));
+        printf("\n");
+    }
+
+    return;
+}
+
+void backtracking(char** buffer, int step, int n) {
+    if (step == n) {
+        print_buffer(buffer, step);
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (!is_vaild(buffer, i, step, n)) {
+            *(*(buffer + step) + i) = BLACK;
+            continue;
+        }
+        *(*(buffer + step) + i) = QUEEN;
+        backtracking(buffer, step + 1, n);
+        *(*(buffer + step) + i) = BLACK;
+    }
+    return;
+}
+
+int main(void) {
+    char** buffer;
+    buffer = (char**)malloc(sizeof(char*) * LEN);
+    for (int i = 0; i < LEN; i++) {
+        *(buffer + i) = (char*)malloc(sizeof(char) * LEN);
+        memset(*(buffer + i), BLACK, LEN);
+    }
+    int n = 9;
+    backtracking(buffer, 0, n);
 
     for (int i = 0; i < LEN; i++) {
         free(*(buffer + i));
